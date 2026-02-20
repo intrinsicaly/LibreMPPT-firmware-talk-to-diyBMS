@@ -19,6 +19,10 @@ LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 #include "device_status.h"
 #include "helper.h"
 
+#if CONFIG_BMS_MASTER
+#include "bms_master.h"
+#endif
+
 extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
@@ -655,6 +659,31 @@ void Charger::charge_control(BatConf *bat_conf)
             break;
         }
     }
+
+#if CONFIG_BMS_MASTER
+    /* Apply BMS master limits after state machine has set its values */
+    bms_master_update();
+
+    if (bms_master_enabled && !bms_timeout_detected) {
+        if (!bms_charge_enabled && state != CHG_STATE_IDLE) {
+            LOG_INF("BMS master disabled charging");
+            port->pos_current_limit = 0;
+            enter_state(CHG_STATE_IDLE);
+        }
+        else if (state != CHG_STATE_IDLE) {
+            /* Apply most restrictive current limit */
+            if (bms_current_limit > 0.0f) {
+                port->pos_current_limit =
+                    MIN(port->pos_current_limit, bms_current_limit);
+            }
+            /* Apply most restrictive voltage limit */
+            if (bms_voltage_limit > 0.0f) {
+                port->bus->sink_voltage_intercept =
+                    MIN(port->bus->sink_voltage_intercept, bms_voltage_limit);
+            }
+        }
+    }
+#endif /* CONFIG_BMS_MASTER */
 }
 
 void Charger::init_terminal(BatConf *bat) const

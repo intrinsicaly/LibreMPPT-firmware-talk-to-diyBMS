@@ -437,6 +437,48 @@ public:
      */
     float target_current_control;
 
+    // BMS Master Control
+
+    /**
+     * Accept control commands from BMS master via CAN
+     */
+    bool bms_master_enabled = false;
+
+    /**
+     * BMS enable/disable override for charging
+     */
+    bool bms_charge_enabled = true;
+
+    /**
+     * Effective BMS voltage limit applied to charger (V), 0 = no limit set
+     */
+    float bms_voltage_limit = 0.0f;
+
+    /**
+     * Effective BMS current limit applied to charger (A), 0 = no limit set
+     */
+    float bms_current_limit = 0.0f;
+
+    /**
+     * CAN node ID of the BMS master
+     */
+    uint16_t bms_node_id = 0;
+
+    /**
+     * Seconds without BMS message before reverting to local control
+     */
+    uint16_t bms_timeout_seconds = 10;
+
+    /**
+     * Flag set when BMS communication has timed out
+     */
+    bool bms_timeout_detected = false;
+
+    /**
+     * Uptime (seconds) of the last received BMS message
+     */
+    uint32_t time_last_bms_msg = 0;
+
     /**
      * Detect if two batteries are connected in series (12V/24V auto-detection)
      */

@@ -25,6 +25,10 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 #include "helper.h"
 #include "thingset.h"
 
+#if CONFIG_BMS_MASTER
+#include "bms_master.h"
+#endif
+
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), can_en))
 #define CAN_EN_GPIO DT_CHILD(DT_PATH(outputs), can_en)
 #endif
@@ -246,6 +250,12 @@ void can_pubsub_thread()
                 int status = ts.bin_import(buf, 4 + rx_frame.dlc, TS_WRITE_MASK, SUBSET_CTRL);
                 if (status == TS_STATUS_CHANGED) {
                     charger.time_last_ctrl_msg = uptime();
+#if CONFIG_BMS_MASTER
+                    /* Update BMS heartbeat when a BMS control message is received */
+                    if (data_id >= 0x8001 && data_id <= 0x8006) {
+                        bms_control_updated();
+                    }
+#endif
                 }
             }
         }

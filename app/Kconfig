@@ -473,6 +473,9 @@ endif
 # include custom Kconfig if existing
 orsource "../src/custom/Kconfig"
 
+# include BMS master Kconfig
+orsource "Kconfig.bms"
+
 #if 0
 #orsource "modules/thingset/zephyr/Kconfig.thingset"
 #endif
