@@ -1,0 +1,41 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+# BMS Master Control Configuration
+
+menuconfig BMS_MASTER
+    bool "Enable BMS Master Control"
+    default n
+    help
+      Allow external BMS to control charging via CAN bus
+
+if BMS_MASTER
+
+config BMS_MASTER_ENABLED
+    bool "Enable BMS master control at boot"
+    default y
+    help
+      Accept control commands from BMS master on startup
+
+config BMS_MASTER_NODE_ID
+    hex "BMS Master CAN Node ID"
+    default 0x0001
+    help
+      Expected CAN node ID of the BMS master controller
+
+config BMS_MASTER_TIMEOUT_SECONDS
+    int "BMS communication timeout (seconds)"
+    default 10
+    range 5 60
+    help
+      Revert to local control if no BMS message received for this duration
+
+config BMS_MASTER_LOG_LEVEL
+    int "BMS master log level"
+    default 3
+    range 0 4
+    help
+      Log level for BMS master control module
+      0=None, 1=Error, 2=Warning, 3=Info, 4=Debug
+
+endif # BMS_MASTER

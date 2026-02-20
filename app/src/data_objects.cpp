@@ -69,6 +69,10 @@ bool pub_can_enable = IS_ENABLED(CONFIG_THINGSET_CAN_PUB_DEFAULT);
 uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
 #endif
 
+#if CONFIG_BMS_MASTER
+#include "bms_master.h"
+#endif
+
 /**
  * Thing Set Data Objects (see thingset.io for specification)
  */
@@ -1137,6 +1141,62 @@ static ThingSetDataObject data_objects[] = {
     }*/
     TS_ITEM_FLOAT(0x7001, "zCtrlTarget_A", &charger.target_current_control, 1,
         ID_CTRL, TS_ANY_RW, SUBSET_CTRL),
+
+#if CONFIG_BMS_MASTER
+    /*{
+        "title": {
+            "en": "BMS Charge Enable",
+            "de": "BMS Laden freigeben"
+        }
+    }*/
+    TS_ITEM_BOOL(0x8001, "cChargeEnable", &bms_charge_enable,
+        ID_CTRL, TS_ANY_R | TS_ANY_W, SUBSET_CTRL),
+
+    /*{
+        "title": {
+            "en": "BMS Target Voltage",
+            "de": "BMS Spannungssollwert"
+        }
+    }*/
+    TS_ITEM_FLOAT(0x8002, "cTargetVoltage_V", &bms_target_voltage, 1,
+        ID_CTRL, TS_ANY_R | TS_ANY_W, SUBSET_CTRL),
+
+    /*{
+        "title": {
+            "en": "BMS Max Charge Current",
+            "de": "BMS Maximaler Ladestrom"
+        }
+    }*/
+    TS_ITEM_FLOAT(0x8003, "cMaxChargeCurrent_A", &bms_max_charge_current, 1,
+        ID_CTRL, TS_ANY_R | TS_ANY_W, SUBSET_CTRL),
+
+    /*{
+        "title": {
+            "en": "BMS Topping Voltage",
+            "de": "BMS Absorptionsspannung"
+        }
+    }*/
+    TS_ITEM_FLOAT(0x8004, "cToppingVoltage_V", &bms_topping_voltage, 1,
+        ID_CTRL, TS_ANY_R | TS_ANY_W, SUBSET_CTRL),
+
+    /*{
+        "title": {
+            "en": "BMS Float Voltage",
+            "de": "BMS Erhaltungsspannung"
+        }
+    }*/
+    TS_ITEM_FLOAT(0x8005, "cFloatVoltage_V", &bms_float_voltage, 1,
+        ID_CTRL, TS_ANY_R | TS_ANY_W, SUBSET_CTRL),
+
+    /*{
+        "title": {
+            "en": "BMS Heartbeat Timestamp",
+            "de": "BMS Heartbeat-Zeitstempel"
+        }
+    }*/
+    TS_ITEM_UINT32(0x8006, "cBmsHeartbeat_s", &bms_heartbeat_timestamp,
+        ID_CTRL, TS_ANY_R, 0),
+#endif /* CONFIG_BMS_MASTER */
 };
 /* clang-format on */
 

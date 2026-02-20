@@ -28,6 +28,10 @@
 #include "load.h"       // load and USB output management
 #include "pwm_switch.h" // PWM charge controller
 
+#if CONFIG_BMS_MASTER
+#include "bms_master.h"
+#endif
+
 int main(void)
 {
     printf("Hardware: Libre Solar %s (%s)\n", DT_PROP(DT_PATH(pcb), type),
@@ -55,6 +59,10 @@ int main(void)
 
     // read custom configuration from EEPROM
     data_objects_init();
+
+#if CONFIG_BMS_MASTER
+    bms_master_init();
+#endif
 
     // Data Acquisition (DAQ) setup
     daq_setup();

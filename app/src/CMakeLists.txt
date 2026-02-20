@@ -24,6 +24,10 @@ target_sources(app PRIVATE
 
 add_subdirectory(ext)
 
+if(${CONFIG_BMS_MASTER})
+        target_sources(app PRIVATE bms_master.cpp)
+endif()
+
 if(${CONFIG_CUSTOM_DATA_OBJECTS_FILE})
         target_sources(app PRIVATE data_objects_custom.cpp)
 endif()
