@@ -17,3 +17,4 @@ build
 .pio
 bin
 html
+_codeql_detected_source_root
