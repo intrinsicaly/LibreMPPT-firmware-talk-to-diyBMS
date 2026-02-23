@@ -1,0 +1,244 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/g4/stm32g431Xb.dtsi>
+#include <st/g4/stm32g431c(6-8-b)tx-pinctrl.dtsi>
+
+/ {
+	model = "Libre Solar MPPT 4820 HC 1kW";
+	compatible = "st,stm32g431";
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "MPPT 4820 HC 1kW";
+
+		hs-voltage-max = <100>;
+		ls-voltage-max = <55>;
+		dcdc-current-max = <40>;
+	};
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpioa 6 GPIO_ACTIVE_LOW>,	/* chg red */
+			<&gpioc 14 GPIO_ACTIVE_LOW>,	/* chg green */
+			<&gpiob 9 GPIO_ACTIVE_LOW>,	/* dis red */
+			<&gpioc 15 GPIO_ACTIVE_LOW>;	/* dis green */
+
+		pwr {
+			states = <0 1 0 0>;
+		};
+
+		load {
+			states = <0 0 0 1>;
+		};
+	};
+
+	outputs {
+		compatible = "outputs";
+
+		load {
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+			current-max = <40>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
+
+		charge_pump {
+			pwms = <&pwm8 2 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
+		};
+
+		can_en {
+			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		v-low {
+			io-channels = <&adc1 12>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		v-high {
+			io-channels = <&adc1 15>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 11>;
+			multiplier = <10000>;	// 10k NTC series resistor
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		i-dcdc {
+			io-channels = <&adc2 1>;
+			// amp gain: 25, resistor: 1 mOhm (reduced for higher current)
+			multiplier = <1000>;
+			divider = <25>;	// 1*25
+		};
+
+		i-load {
+			io-channels = <&adc2 2>;
+			// amp gain: 25, resistor: 1 mOhm (reduced for higher current)
+			multiplier = <1000>;
+			divider = <25>;	// 1*25
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart1;
+		uart-uext = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
+	};
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(25)>;
+	status = "okay";
+};
+
+&pll {
+	div-m = <5>;
+	mul-n = <34>;
+	div-p = <2>;
+	div-q = <2>;
+	div-r = <2>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(170)>;
+	ahb-prescaler = <1>;
+	apb1-prescaler = <1>;
+	apb2-prescaler = <1>;
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pc4 &usart1_rx_pc5>;
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pb5>;
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&spi2 {
+	pinctrl-0 = <&spi2_sck_pb13 &spi2_miso_pb14 &spi2_mosi_pb15>;
+	cs-gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&i2c1 {
+	pinctrl-0 = <&i2c1_scl_pa15 &i2c1_sda_pb7>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+};
+
+&fdcan1 {
+	pinctrl-0 = <&fdcan1_rx_pa11 &fdcan1_tx_pa12>;
+	bus-speed = <125000>;
+	bus-speed-data = <500000>;
+	status = "okay";
+};
+
+&timers1 {
+	st,prescaler = <0>;
+	status = "okay";
+
+	halfbridge: halfbridge {
+		compatible = "half-bridge";
+		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+		pinctrl-names = "default";
+		deadtime = <300>;
+		status = "okay";
+	};
+};
+
+&timers8 {
+	status = "okay";
+
+	pwm8: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim8_ch2_pc7>;
+		pinctrl-names = "default";
+	};
+};
+
+&adc1 {
+	pinctrl-0 = <&adc1_in11_pb12 &adc1_in12_pb1 &adc1_in15_pb0>;
+	status = "okay";
+};
+
+&adc2 {
+	pinctrl-0 = <&adc2_in1_pa0 &adc2_in2_pa1>;
+	status = "okay";
+};
+
+&dac1 {
+	status = "okay";
+	pinctrl-0 = <&dac1_out1_pa4 &dac1_out2_pa5>;
+	pinctrl-names = "default";
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Reserved for bootloader: 32 KiB */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x00008000>;
+			read-only;
+		};
+
+		/* Application slot: 96 KiB */
+		slot0_partition: partition@8000 {
+			label = "image-0";
+			reg = <0x00008000 0x00018000>;
+		};
+	};
+};
+
+&iwdg {
+	status = "okay";
+};
